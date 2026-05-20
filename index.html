@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Lecture Note AI</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="hero" aria-labelledby="app-title">
+        <div>
+          <p class="eyebrow">Gemini audio note helper</p>
+          <h1 id="app-title">Lecture Note AI</h1>
+          <p class="lead">講義や自習の短い音声から、文字起こし、3行要約、要点リストを作成します。</p>
+        </div>
+        <div class="privacy-note">
+          <strong>取り扱い注意</strong>
+          <span>個人情報や機密情報を含む音声は送信しないでください。提出スクショにも個人情報を写さないようにしてください。</span>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="settings-title">
+        <div class="section-heading">
+          <div>
+            <p class="step-label">Step 1</p>
+            <h2 id="settings-title">APIキー</h2>
+          </div>
+          <span class="saved-badge" id="keyState">未保存</span>
+        </div>
+
+        <div class="field-group">
+          <label for="apiKey">Gemini APIキー</label>
+          <div class="key-row">
+            <input id="apiKey" name="apiKey" type="password" autocomplete="off" placeholder="AIza...">
+            <button class="icon-button" type="button" id="toggleKey" aria-label="APIキーの表示切替" title="表示切替">表示</button>
+          </div>
+          <p class="hint">キーはこの端末のlocalStorageにだけ保存します。リポジトリには残りません。</p>
+        </div>
+
+        <div class="settings-actions">
+          <button type="button" class="secondary-button" id="saveKey">キーを保存</button>
+          <button type="button" class="ghost-button" id="clearKey">削除</button>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="input-title">
+        <div class="section-heading">
+          <div>
+            <p class="step-label">Step 2</p>
+            <h2 id="input-title">音声を入れる</h2>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label for="lectureTitle">講義名</label>
+          <input id="lectureTitle" name="lectureTitle" type="text" placeholder="例: 情報社会論 第3回">
+        </div>
+
+        <div class="field-group">
+          <label for="audioFile">音声ファイル</label>
+          <label class="drop-zone" for="audioFile" id="dropZone">
+            <input id="audioFile" name="audioFile" type="file" accept="audio/*">
+            <span class="drop-main">ファイルを選択</span>
+            <span class="drop-sub" id="fileInfo">30秒から2分程度の短い音声で試してください</span>
+          </label>
+        </div>
+
+        <div class="field-grid">
+          <div class="field-group">
+            <label for="modelName">モデル</label>
+            <select id="modelName" name="modelName">
+              <option value="gemini-2.5-flash">gemini-2.5-flash</option>
+              <option value="gemini-2.5-pro">gemini-2.5-pro</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="language">出力言語</label>
+            <select id="language" name="language">
+              <option value="日本語">日本語</option>
+              <option value="English">English</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="button" class="primary-button" id="runButton">文字起こしと要約を実行</button>
+        <div class="status" id="status" role="status" aria-live="polite">準備完了</div>
+      </section>
+
+      <section class="results" aria-label="出力結果">
+        <article class="result-block">
+          <div class="result-header">
+            <div>
+              <p class="step-label">Output 1</p>
+              <h2>文字起こし</h2>
+            </div>
+            <button type="button" class="copy-button" data-copy-target="transcriptOutput">コピー</button>
+          </div>
+          <textarea id="transcriptOutput" readonly placeholder="ここに文字起こし全文が表示されます"></textarea>
+        </article>
+
+        <article class="result-block">
+          <div class="result-header">
+            <div>
+              <p class="step-label">Output 2</p>
+              <h2>3行要約</h2>
+            </div>
+            <button type="button" class="copy-button" data-copy-target="summaryOutput">コピー</button>
+          </div>
+          <textarea id="summaryOutput" readonly placeholder="ここに3行要約が表示されます"></textarea>
+        </article>
+
+        <article class="result-block">
+          <div class="result-header">
+            <div>
+              <p class="step-label">Output 3</p>
+              <h2>要点</h2>
+            </div>
+            <button type="button" class="copy-button" data-copy-target="pointsOutput">コピー</button>
+          </div>
+          <textarea id="pointsOutput" readonly placeholder="ここに3〜5個の箇条書きが表示されます"></textarea>
+        </article>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
