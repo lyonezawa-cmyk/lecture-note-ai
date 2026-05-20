@@ -1,5 +1,15 @@
 const STORAGE_KEY = "lecture-note-ai-gemini-key";
-const MAX_INLINE_AUDIO_BYTES = 18 * 1024 * 1024;
+const MAX_INLINE_MEDIA_BYTES = 18 * 1024 * 1024;
+const SUPPORTED_EXTENSIONS = [".m4a", ".mp3", ".wav", ".aac", ".webm", ".mov", ".mp4"];
+const MIME_FALLBACKS = {
+  ".m4a": "audio/mp4",
+  ".mp3": "audio/mpeg",
+  ".wav": "audio/wav",
+  ".aac": "audio/aac",
+  ".webm": "audio/webm",
+  ".mov": "video/quicktime",
+  ".mp4": "video/mp4"
+};
 
 const elements = {
   apiKey: document.querySelector("#apiKey"),
@@ -48,6 +58,34 @@ function formatBytes(bytes) {
     return `${Math.max(1, Math.round(bytes / 1024))} KB`;
   }
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
+function getFileExtension(file) {
+  const name = file.name.toLowerCase();
+  return SUPPORTED_EXTENSIONS.find((extension) => name.endsWith(extension)) || "";
+}
+
+function isSupportedMediaFile(file) {
+  return file.type.startsWith("audio/")
+    || file.type.startsWith("video/")
+    || Boolean(getFileExtension(file));
+}
+
+function getMimeType(file) {
+  return file.type || MIME_FALLBACKS[getFileExtension(file)] || "audio/mpeg";
+}
+
+function describeFileIssue(file) {
+  if (!file) {
+    return "";
+  }
+  if (!isSupportedMediaFile(file)) {
+    return "対応形式はm4a/mp3/wav/aac/webm/mov/mp4です。";
+  }
+  if (file.size > MAX_INLINE_MEDIA_BYTES) {
+    return `ファイルが大きすぎます（${formatBytes(file.size)}）。18MB以下、30秒〜2分程度に短くしてください。`;
+  }
+  return "";
 }
 
 function fileToBase64(file) {
@@ -108,7 +146,7 @@ async function callGemini({ apiKey, model, parts, responseMimeType }) {
 async function transcribeAudio({ apiKey, model, language, file, title }) {
   const base64Audio = await fileToBase64(file);
   const prompt = [
-    `この音声を${language}で正確に文字起こししてください。`,
+    `この音声または動画内の音声を${language}で正確に文字起こししてください。`,
     "講義や自習の録音として扱い、聞き取れない箇所は「[聞き取り不可]」と書いてください。",
     "要約や解説は入れず、文字起こし本文だけを返してください。",
     title ? `講義名: ${title}` : ""
@@ -121,7 +159,7 @@ async function transcribeAudio({ apiKey, model, language, file, title }) {
       { text: prompt },
       {
         inlineData: {
-          mimeType: file.type || "audio/mpeg",
+          mimeType: getMimeType(file),
           data: base64Audio
         }
       }
@@ -184,11 +222,11 @@ function validateInputs() {
   if (!file) {
     throw new Error("音声ファイルを選択してください。");
   }
-  if (!file.type.startsWith("audio/")) {
-    throw new Error("音声ファイルを選択してください。");
+  if (!isSupportedMediaFile(file)) {
+    throw new Error("対応形式はm4a/mp3/wav/aac/webm/mov/mp4です。");
   }
-  if (file.size > MAX_INLINE_AUDIO_BYTES) {
-    throw new Error("このサンプル版では18MB以下の短い音声を選択してください。");
+  if (file.size > MAX_INLINE_MEDIA_BYTES) {
+    throw new Error("このサンプル版では18MB以下の短い音声または動画を選択してください。iPhoneの動画は30秒〜2分程度に短くしてから使ってください。");
   }
 
   return {
@@ -268,9 +306,11 @@ elements.apiKey.addEventListener("input", updateKeyState);
 
 elements.audioFile.addEventListener("change", () => {
   const file = elements.audioFile.files[0];
+  const issue = describeFileIssue(file);
   elements.fileInfo.textContent = file
-    ? `${file.name} / ${formatBytes(file.size)}`
+    ? issue || `${file.name} / ${formatBytes(file.size)}`
     : "30秒から2分程度の短い音声で試してください";
+  elements.fileInfo.classList.toggle("is-warning", Boolean(issue));
 });
 
 elements.runButton.addEventListener("click", run);

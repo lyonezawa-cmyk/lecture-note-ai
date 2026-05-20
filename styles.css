@@ -263,7 +263,12 @@ textarea:focus,
 .drop-sub {
   color: var(--muted);
   font-size: 0.88rem;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+}
+
+.drop-sub.is-warning {
+  color: var(--danger);
+  font-weight: 800;
 }
 
 .field-grid {
