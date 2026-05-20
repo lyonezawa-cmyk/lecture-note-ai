@@ -220,7 +220,7 @@ function validateInputs() {
     throw new Error("Gemini APIキーを入力してください。");
   }
   if (!file) {
-    throw new Error("音声ファイルを選択してください。");
+    throw new Error("音声または動画ファイルを選択してください。");
   }
   if (!isSupportedMediaFile(file)) {
     throw new Error("対応形式はm4a/mp3/wav/aac/webm/mov/mp4です。");
