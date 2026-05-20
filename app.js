@@ -88,6 +88,20 @@ function describeFileIssue(file) {
   return "";
 }
 
+function normalizeGeminiError(status, message) {
+  const lowerMessage = message.toLowerCase();
+  if (status === 503 || lowerMessage.includes("high demand") || lowerMessage.includes("overloaded") || lowerMessage.includes("unavailable")) {
+    return "Gemini APIが混み合っています。数分後にもう一度試すか、モデルをgemini-2.5-proに切り替えて試してください。";
+  }
+  if (status === 429 || lowerMessage.includes("quota") || lowerMessage.includes("rate limit")) {
+    return "Gemini APIの利用回数または上限に達しました。少し待ってから再実行してください。";
+  }
+  if (status === 400 && lowerMessage.includes("api key")) {
+    return "Gemini APIキーを確認してください。コピー時に余分な空白が入っていないかも見てください。";
+  }
+  return message;
+}
+
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -129,7 +143,7 @@ async function callGemini({ apiKey, model, parts, responseMimeType }) {
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
     const message = data?.error?.message || `HTTP ${response.status}`;
-    throw new Error(message);
+    throw new Error(normalizeGeminiError(response.status, message));
   }
 
   const text = data?.candidates?.[0]?.content?.parts
